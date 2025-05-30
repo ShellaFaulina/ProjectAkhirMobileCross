@@ -33,8 +33,13 @@ const slides = [
   },
 ];
 
+type RootStackParamList = {
+  Login: undefined;
+  // tambahkan screen lain jika ada
+};
+
 export default function GetStartedScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<import('@react-navigation/native').NavigationProp<RootStackParamList>>();
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 

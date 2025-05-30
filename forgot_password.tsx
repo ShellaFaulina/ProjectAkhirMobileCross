@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { supabase } from './supabaseClient'; // Import supabase client
 
 export default function ResetPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSendReset = async () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Email harus diisi.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.api.resetPasswordForEmail(email);
+    setLoading(false);
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      Alert.alert('Sukses', 'Link reset password telah dikirim ke email kamu.', [
+        { text: 'OK', onPress: () => navigation.navigate('Login') }
+      ]);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -17,9 +36,10 @@ export default function ResetPasswordScreen({ navigation }) {
       />
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Verification')}
+        onPress={handleSendReset}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>Send Code</Text>
+        <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Code'}</Text>
       </TouchableOpacity>
     </View>
   );

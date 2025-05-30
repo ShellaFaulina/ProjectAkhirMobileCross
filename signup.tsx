@@ -4,19 +4,21 @@ import {
   StyleSheet, Image, Alert, Linking
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Icon from 'react-native-vector-icons/Feather'; // <-- Tambahkan ini
+import Icon from 'react-native-vector-icons/Feather';
+import { supabase } from './supabaseClient'; // Import supabase client
 
 export default function Signup({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChecked, setIsChecked] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // <-- Untuk password
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // <-- Untuk konfirmasi
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert('Error', 'Semua field harus diisi.');
       return;
@@ -38,9 +40,22 @@ export default function Signup({ navigation }) {
       return;
     }
 
-    Alert.alert('Sukses', 'Registrasi berhasil!', [
-      { text: 'OK', onPress: () => navigation.replace('Login') },
-    ]);
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      Alert.alert(
+        'Sukses',
+        'Registrasi berhasil! Silakan cek email untuk verifikasi.',
+        [{ text: 'OK', onPress: () => navigation.replace('Login') }]
+      );
+    }
   };
 
   const openTerms = () => Linking.openURL('https://yourapp.com/terms');
@@ -109,11 +124,11 @@ export default function Signup({ navigation }) {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleRegister}>
-        <Text style={styles.loginText}>Register</Text>
+      <TouchableOpacity style={styles.loginButton} onPress={handleRegister} disabled={loading}>
+        <Text style={styles.loginText}>{loading ? 'Registering...' : 'Register'}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.googleButton}>
+      <TouchableOpacity style={styles.googleButton} disabled>
         <View style={styles.socialContent}>
           <Image
             source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
@@ -123,7 +138,7 @@ export default function Signup({ navigation }) {
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.facebookButton}>
+      <TouchableOpacity style={styles.facebookButton} disabled>
         <View style={styles.socialContent}>
           <FontAwesome name="facebook" size={20} color="#fff" style={styles.socialIcon} />
           <Text style={styles.facebookText}>Login with Facebook</Text>

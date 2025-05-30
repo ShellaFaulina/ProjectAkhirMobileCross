@@ -10,7 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 
 export default function GetStartedScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const screenHeight = Dimensions.get('window').height;
 
   return (
@@ -24,7 +24,7 @@ export default function GetStartedScreen() {
         <View style={[styles.bottomContainer, { paddingBottom: screenHeight * 0.05 }]}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('GetStartedScreen')} // Arah ke screen SignUp
+            onPress={() => navigation.navigate('SignUp')} // Arah ke screen SignUp
           >
             <Text style={styles.buttonText}>Get Started</Text>
           </TouchableOpacity>

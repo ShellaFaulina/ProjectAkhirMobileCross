@@ -10,19 +10,34 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from './supabaseClient'; // Import supabase client
 
-export default function ResetPassword() {
+export default function ResetPassword({ navigation }) {
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (password === rePassword && password.length > 0) {
-      setModalVisible(true);
+      setLoading(true);
+      const token = supabase.auth.session()?.access_token;
+      const { error } = await supabase.auth.api.updateUser(token, { password });
+      setLoading(false);
+      if (error) {
+        alert(error.message);
+      } else {
+        setModalVisible(true);
+      }
     } else {
       alert('Passwords do not match or are empty.');
     }
+  };
+
+  const handleLoginPress = () => {
+    setModalVisible(false);
+    navigation?.navigate?.('Login');
   };
 
   return (
@@ -62,8 +77,8 @@ export default function ResetPassword() {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit</Text>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? 'Updating...' : 'Submit'}</Text>
       </TouchableOpacity>
 
       <Modal
@@ -77,7 +92,7 @@ export default function ResetPassword() {
             <Ionicons name="checkmark-circle" size={48} color="green" />
             <Text style={styles.modalTitle}>Password Changed!</Text>
             <Text style={styles.modalText}>You can now use your new password to login.</Text>
-            <Pressable style={styles.loginButton} onPress={() => setModalVisible(false)}>
+            <Pressable style={styles.loginButton} onPress={handleLoginPress}>
               <Text style={styles.loginButtonText}>Login</Text>
             </Pressable>
           </View>

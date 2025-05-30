@@ -6,11 +6,27 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { supabase } from './supabaseClient'; // Import supabase client
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signIn({
+      email,
+      password,
+    });
+    setLoading(false);
+    if (error) {
+      alert(error.message);
+    } else {
+      navigation.navigate('DietForm'); // Ganti dengan halaman utama setelah login
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,12 +75,13 @@ export default function LoginScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() => navigation.navigate('DietForm')}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginText}>Login</Text>
+            <Text style={styles.loginText}>{loading ? 'Loading...' : 'Login'}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.googleButton}>
+          <TouchableOpacity style={styles.googleButton} disabled>
             <View style={styles.socialContent}>
               <Image
                 source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
@@ -74,7 +91,7 @@ export default function LoginScreen({ navigation }) {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.facebookButton}>
+          <TouchableOpacity style={styles.facebookButton} disabled>
             <View style={styles.socialContent}>
               <FontAwesome
                 name="facebook"

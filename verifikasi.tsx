@@ -1,10 +1,14 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Keyboard } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Keyboard, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from './supabaseClient'; // Import supabase client
 
-export default function VerificationScreen({ navigation }) {
+export default function VerificationScreen({ navigation, route }) {
   const [code, setCode] = useState(['', '', '', '']);
+  const [loading, setLoading] = useState(false);
   const inputs = useRef([]);
+  // Ambil email dari params jika ada
+  const email = route?.params?.email || 'your@email.com';
 
   const handleChange = (value, index) => {
     const newCode = [...code];
@@ -15,17 +19,53 @@ export default function VerificationScreen({ navigation }) {
       inputs.current[index + 1].focus();
     }
 
-    // Optional: automatically submit if all fields are filled
     if (index === 3 && value) {
       Keyboard.dismiss();
       handleSubmit(newCode.join(''));
     }
   };
 
-  const handleSubmit = (finalCode) => {
-    console.log('Code entered:', finalCode);
-    // Ganti ini dengan validasi atau navigasi ke halaman reset password
-    navigation.navigate('ResetPassword');
+  // Fungsi verifikasi kode (magic link/email OTP)
+  const handleSubmit = async (finalCode) => {
+    if (finalCode.length < 4) {
+      Alert.alert('Error', 'Kode harus 4 digit.');
+      return;
+    }
+    setLoading(true);
+    // Supabase tidak menyediakan verifikasi kode manual untuk sign up, 
+    // biasanya user klik link di email. 
+    // Jika kamu pakai OTP (one time password), gunakan supabase.auth.verifyOtp
+    try {
+      const { data, error } = await supabase.auth.api.verifyOTP({
+        email,
+        token: finalCode,
+        type: 'email' as any, // Per Supabase v1.x, gunakan 'email' untuk Email OTP
+        // Perbaikan: gunakan 'email' sebagai EmailOTPType
+      });
+      setLoading(false);
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Sukses', 'Verifikasi berhasil!', [
+          { text: 'OK', onPress: () => navigation.replace('Login') },
+        ]);
+      }    } catch (err) {
+      setLoading(false);
+      Alert.alert('Error', 'Terjadi kesalahan.');
+    }
+  };
+
+  // Fungsi resend kode (mengirim ulang email verifikasi)
+  const handleResend = async () => {
+    setLoading(true);
+    // Tidak ada method resend di Supabase v1.x, jadi gunakan signUp lagi untuk resend email verifikasi
+    const { error } = await supabase.auth.signUp({ email });
+    setLoading(false);
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      Alert.alert('Sukses', 'Kode verifikasi telah dikirim ulang ke email.');
+    }
   };
 
   return (
@@ -40,14 +80,14 @@ export default function VerificationScreen({ navigation }) {
       <View style={styles.container}>
         <Text style={styles.title}>Enter 4 digit code</Text>
         <Text style={styles.subtitle}>
-          Enter 4 digit code that you receive on your email (chris.waro@example.com)
+          Enter 4 digit code that you receive on your email ({email})
         </Text>
 
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
             <TextInput
               key={index}
-              ref={(ref) => inputs.current[index] = ref}
+              ref={ref => { inputs.current[index] = ref; }}
               style={styles.codeInput}
               keyboardType="number-pad"
               maxLength={1}
@@ -60,11 +100,14 @@ export default function VerificationScreen({ navigation }) {
         </View>
 
         <Text style={styles.resendText}>
-          Not received a code? <Text style={styles.resendLink}>Resend</Text>
+          Not received a code?{' '}
+          <Text style={styles.resendLink} onPress={handleResend}>
+            {loading ? 'Sending...' : 'Resend'}
+          </Text>
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={() => handleSubmit(code.join(''))}>
-          <Text style={styles.buttonText}>Continue</Text>
+        <TouchableOpacity style={styles.button} onPress={() => handleSubmit(code.join(''))} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? 'Verifying...' : 'Continue'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
