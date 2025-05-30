@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import {
   ScrollView,
   Text,
@@ -17,6 +17,7 @@ import {
 } from "../../data/MockDataAPI";
 import BackButton from "../../components/BackButton/BackButton";
 import ViewIngredientsButton from "../../components/ViewIngredientsButton/ViewIngredientsButton";
+import i18n from "../../../i18n";
 
 const { width: viewportWidth } = Dimensions.get("window");
 
@@ -24,20 +25,15 @@ export default function RecipeScreen(props) {
   const { navigation, route } = props;
   const item = route.params?.item;
   const category = getCategoryById(item.categoryId);
-  const title = getCategoryName(category.id);
-  const slider1Ref = useRef(null)
-  const progress = useSharedValue(0)
+  const titleKey = getCategoryName(category.id); // key: 'cookies', 'salad', etc.
+  const recipeKey = item.title.toLowerCase().replace(/\s+/g, '_'); // e.g. "Vegan Cookies" → "vegan_cookies"
+  const slider1Ref = useRef(null);
+  const progress = useSharedValue(0);
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTransparent: "true",
-      headerLeft: () => (
-        <BackButton
-          onPress={() => {
-            navigation.goBack();
-          }}
-        />
-      ),
+      headerTransparent: true,
+      headerLeft: () => <BackButton onPress={() => navigation.goBack()} />,
       headerRight: () => <View />,
     });
   }, []);
@@ -50,31 +46,24 @@ export default function RecipeScreen(props) {
     </TouchableHighlight>
   );
 
-  const onPressIngredient = (item) => {
-    var name = getIngredientName(item);
-    let ingredient = item;
-    navigation.navigate("Ingredient", { ingredient, name });
+  const onPressPagination = (index) => {
+    slider1Ref.current?.scrollTo({
+      count: index - progress.value,
+      animated: true,
+    });
   };
 
-
-  const onPressPagination = (index) =>
-    {
-      slider1Ref.current?.scrollTo({
-        count: index - progress.value,
-        animated: true,
-      })
-    }
-  
+  const onPressIngredient = (ingredient) => {
+    const name = getIngredientName(ingredient);
+    navigation.navigate("Ingredient", { ingredient, name });
+  };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.carouselContainer}>
         <View style={styles.carousel}>
           <Carousel
-              ref={c =>
-              {
-                slider1Ref.current = c
-              }}
+            ref={(c) => (slider1Ref.current = c)}
             loop={false}
             width={viewportWidth}
             height={viewportWidth}
@@ -85,13 +74,8 @@ export default function RecipeScreen(props) {
             onProgressChange={progress}
           />
           <Pagination.Basic
-            renderItem={(item) => (
-              <View
-                style={{
-                  backgroundColor: "rgba(255,255,255,1)",
-                  flex: 1,
-                }}
-              />
+            renderItem={() => (
+              <View style={{ backgroundColor: "rgba(255,255,255,1)", flex: 1 }} />
             )}
             progress={progress}
             data={item.photosArray}
@@ -101,17 +85,25 @@ export default function RecipeScreen(props) {
           />
         </View>
       </View>
+
       <View style={styles.infoRecipeContainer}>
-        <Text style={styles.infoRecipeName}>{item.title}</Text>
+        {/* 🔁 Resep name ikut diterjemahkan */}
+        <Text style={styles.infoRecipeName}>
+          {i18n.t(recipeKey)}
+        </Text>
+
+        {/* 🔁 Kategori diterjemahkan */}
         <View style={styles.infoContainer}>
           <TouchableHighlight
             onPress={() =>
-              navigation.navigate("RecipesList", { category, title })
+              navigation.navigate("RecipesList", { category, title: titleKey })
             }
           >
-            <Text style={styles.category}>
-              {getCategoryName(item.categoryId).toUpperCase()}
-            </Text>
+            <View>
+              <Text style={styles.category}>
+                {i18n.t(titleKey).toUpperCase()}
+              </Text>
+            </View>
           </TouchableHighlight>
         </View>
 
@@ -120,19 +112,24 @@ export default function RecipeScreen(props) {
             style={styles.infoPhoto}
             source={require("../../../assets/icons/time.png")}
           />
-          <Text style={styles.infoRecipe}>{item.time} minutes </Text>
+          <Text style={styles.infoRecipe}>
+            {item.time} {i18n.t("minutes")}
+          </Text>
         </View>
 
         <View style={styles.infoContainer}>
           <ViewIngredientsButton
             onPress={() => {
-              let ingredients = item.ingredients;
-              let title = "Ingredients for " + item.title;
-              navigation.navigate("IngredientsDetails", { ingredients, title });
+              const ingredients = item.ingredients;
+              const translatedTitle = i18n.t(recipeKey);
+              const viewTitle = `${i18n.t("ingredients_for")} ${translatedTitle}`;
+              navigation.navigate("IngredientsDetails", { ingredients, title: viewTitle });
             }}
           />
         </View>
+
         <View style={styles.infoContainer}>
+          {/* Deskripsi tetap dalam bahasa Inggris */}
           <Text style={styles.infoDescriptionRecipe}>{item.description}</Text>
         </View>
       </View>

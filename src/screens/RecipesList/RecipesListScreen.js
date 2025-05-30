@@ -2,6 +2,7 @@ import React, { useLayoutEffect } from "react";
 import { FlatList, Text, View, TouchableHighlight, Image } from "react-native";
 import styles from "./styles";
 import { getRecipes, getCategoryName } from "../../data/MockDataAPI";
+import i18n from "../../../i18n"; // ✅ Tambahan
 
 export default function RecipesListScreen(props) {
   const { navigation, route } = props;
@@ -21,18 +22,30 @@ export default function RecipesListScreen(props) {
   };
 
   const renderRecipes = ({ item }) => (
-    <TouchableHighlight underlayColor="rgba(73,182,77,0.9)" onPress={() => onPressRecipe(item)}>
+    <TouchableHighlight
+      underlayColor="rgba(73,182,77,0.9)"
+      onPress={() => onPressRecipe(item)}
+    >
       <View style={styles.container}>
         <Image style={styles.photo} source={{ uri: item.photo_url }} />
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.category}>{getCategoryName(item.categoryId)}</Text>
+        <Text style={styles.title}>{item.title}</Text> {/* ❌ Tetap pakai bahasa Inggris */}
+        <Text style={styles.category}>
+          {i18n.t(getCategoryName(item.categoryId))}
+        </Text>
       </View>
     </TouchableHighlight>
   );
 
   return (
     <View>
-      <FlatList vertical showsVerticalScrollIndicator={false} numColumns={2} data={recipesArray} renderItem={renderRecipes} keyExtractor={(item) => `${item.recipeId}`} />
+      <FlatList
+        vertical
+        showsVerticalScrollIndicator={false}
+        numColumns={2}
+        data={recipesArray}
+        renderItem={renderRecipes}
+        keyExtractor={(item) => `${item.recipeId}`}
+      />
     </View>
   );
 }

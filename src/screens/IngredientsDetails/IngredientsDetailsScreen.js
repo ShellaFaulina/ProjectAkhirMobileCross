@@ -2,6 +2,7 @@ import React, { useLayoutEffect } from "react";
 import { FlatList, Text, View, Image, TouchableHighlight } from "react-native";
 import styles from "./styles";
 import { getIngredientName, getAllIngredients } from "../../data/MockDataAPI";
+import i18n from "../../../i18n";
 
 export default function IngredientsDetailsScreen(props) {
   const { navigation, route } = props;
@@ -31,7 +32,9 @@ export default function IngredientsDetailsScreen(props) {
     >
       <View style={styles.container}>
         <Image style={styles.photo} source={{ uri: item[0].photo_url }} />
-        <Text style={styles.title}>{item[0].name}</Text>
+        <Text style={styles.title}>
+          {i18n.t(item[0].name.toLowerCase().replace(/\s+/g, "_"))}
+        </Text>
         <Text style={{ color: "grey" }}>{item[1]}</Text>
       </View>
     </TouchableHighlight>

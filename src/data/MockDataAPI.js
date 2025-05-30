@@ -1,131 +1,84 @@
-import { Text } from 'react-native';
-import React, { Component } from 'react';
 import { recipes, categories, ingredients } from './dataArrays';
 
+// ✅ Ambil objek kategori lengkap
 export function getCategoryById(categoryId) {
-  let category;
-  categories.map(data => {
-    if (data.id == categoryId) {
-      category = data;
-    }
-  });
-  return category;
+  return categories.find(data => data.id === categoryId);
 }
 
+// ✅ Ambil nama bahan
 export function getIngredientName(ingredientID) {
-  let name;
-  ingredients.map(data => {
-    if (data.ingredientId == ingredientID) {
-      name = data.name;
-    }
-  });
-  return name;
+  const found = ingredients.find(data => data.ingredientId === ingredientID);
+  return found ? found.name : '';
 }
 
+// ✅ Ambil URL gambar bahan
 export function getIngredientUrl(ingredientID) {
-  let url;
-  ingredients.map(data => {
-    if (data.ingredientId == ingredientID) {
-      url = data.photo_url;
-    }
-  });
-  return url;
+  const found = ingredients.find(data => data.ingredientId === ingredientID);
+  return found ? found.photo_url : '';
 }
 
+// ✅ Ambil key nama kategori (dipakai di i18n.t())
 export function getCategoryName(categoryId) {
-  let name;
-  categories.map(data => {
-    if (data.id == categoryId) {
-      name = data.name;
-    }
-  });
-  return name;
+  const found = categories.find(data => data.id === categoryId);
+  return found ? found.name.toLowerCase().replace(/\s+/g, '_') : '';
 }
 
+// ✅ Ambil resep berdasarkan kategori
 export function getRecipes(categoryId) {
-  const recipesArray = [];
-  recipes.map(data => {
-    if (data.categoryId == categoryId) {
-      recipesArray.push(data);
-    }
-  });
-  return recipesArray;
+  return recipes.filter(data => data.categoryId === categoryId);
 }
 
-// modifica
+// ✅ Ambil resep berdasarkan ID bahan
 export function getRecipesByIngredient(ingredientId) {
-  const recipesArray = [];
-  recipes.map(data => {
-    data.ingredients.map(index => {
-      if (index[0] == ingredientId) {
-        recipesArray.push(data);
-      }
-    });
-  });
-  return recipesArray;
+  return recipes.filter(data =>
+    data.ingredients.some(index => index[0] === ingredientId)
+  );
 }
 
+// ✅ Hitung resep per kategori
 export function getNumberOfRecipes(categoryId) {
-  let count = 0;
-  recipes.map(data => {
-    if (data.categoryId == categoryId) {
-      count++;
-    }
-  });
-  return count;
+  return recipes.filter(data => data.categoryId === categoryId).length;
 }
 
+// ✅ Ambil semua objek bahan dari array ID
 export function getAllIngredients(idArray) {
-  const ingredientsArray = [];
-  idArray.map(index => {
-    ingredients.map(data => {
-      if (data.ingredientId == index[0]) {
-        ingredientsArray.push([data, index[1]]);
-      }
-    });
-  });
-  return ingredientsArray;
+  return idArray.map(index => {
+    const found = ingredients.find(data => data.ingredientId === index[0]);
+    return found ? [found, index[1]] : null;
+  }).filter(Boolean);
 }
 
-// functions for search
+// ✅ Cari resep berdasarkan nama bahan
 export function getRecipesByIngredientName(ingredientName) {
   const nameUpper = ingredientName.toUpperCase();
-  const recipesArray = [];
-  ingredients.map(data => {
-    if (data.name.toUpperCase().includes(nameUpper)) {
-      // data.name.yoUpperCase() == nameUpper
-      const recipes = getRecipesByIngredient(data.ingredientId);
-      const unique = [...new Set(recipes)];
-      unique.map(item => {
-        recipesArray.push(item);
-      });
-    }
+  const matchingIngredients = ingredients.filter(data =>
+    data.name.toUpperCase().includes(nameUpper)
+  );
+
+  const recipeSet = new Set();
+  matchingIngredients.forEach(ingredient => {
+    getRecipesByIngredient(ingredient.ingredientId).forEach(recipe =>
+      recipeSet.add(recipe)
+    );
   });
-  const uniqueArray = [...new Set(recipesArray)];
-  return uniqueArray;
+
+  return Array.from(recipeSet);
 }
 
+// ✅ Cari resep berdasarkan nama kategori
 export function getRecipesByCategoryName(categoryName) {
   const nameUpper = categoryName.toUpperCase();
-  const recipesArray = [];
-  categories.map(data => {
-    if (data.name.toUpperCase().includes(nameUpper)) {
-      const recipes = getRecipes(data.id); // return a vector of recipes
-      recipes.map(item => {
-        recipesArray.push(item);
-      });
-    }
-  });
-  return recipesArray;
+  const matchingCategories = categories.filter(data =>
+    data.name.toUpperCase().includes(nameUpper)
+  );
+
+  return matchingCategories.flatMap(cat => getRecipes(cat.id));
 }
 
+// ✅ Cari resep berdasarkan nama resep
 export function getRecipesByRecipeName(recipeName) {
   const nameUpper = recipeName.toUpperCase();
-  const recipesArray = [];
-  recipes.map(data => {
-    if (data.title.toUpperCase().includes(nameUpper)) {
-      recipesArray.push(data);
-    }
-  });
-  return recipesArray;
+  return recipes.filter(data =>
+    data.title.toUpperCase().includes(nameUpper)
+  );
 }
