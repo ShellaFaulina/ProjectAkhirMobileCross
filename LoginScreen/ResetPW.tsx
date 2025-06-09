@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from './supabaseClient'; // Import supabase client
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 export default function ResetPassword({ navigation }) {
   const [password, setPassword] = useState('');
@@ -37,7 +37,7 @@ export default function ResetPassword({ navigation }) {
 
   const handleLoginPress = () => {
     setModalVisible(false);
-    navigation?.navigate?.('Login');
+    navigation?.navigate?.('ResetPassword');
   };
 
   return (
