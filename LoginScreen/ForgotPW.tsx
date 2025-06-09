@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { supabase } from './supabaseClient'; // Import supabase client
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 export default function ResetPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -18,7 +18,7 @@ export default function ResetPasswordScreen({ navigation }) {
       Alert.alert('Error', error.message);
     } else {
       Alert.alert('Sukses', 'Link reset password telah dikirim ke email kamu.', [
-        { text: 'OK', onPress: () => navigation.navigate('Login') }
+        { text: 'OK', onPress: () => navigation.navigate('ResetPassword') }
       ]);
     }
   };
