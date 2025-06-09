@@ -4,7 +4,7 @@ import { Text, Button, Chip, RadioButton, Switch } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 
-const DietForm = () => {
+const DietForm = ({ navigation }) => {
   const [step, setStep] = useState(1);
   const [diet, setDiet] = useState('');
   const [allergies, setAllergies] = useState([]);
@@ -38,7 +38,7 @@ const DietForm = () => {
   const formattedTime = time.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false, // Set to false for 24-hour format
+    hour12: false,
   });
 
   const renderStep = () => {
@@ -203,13 +203,17 @@ const DietForm = () => {
       }}
     >
       {renderStep()}
+
       <Button
         mode="contained"
-        onPress={() =>
-          step < 5
-            ? setStep(step + 1)
-            : alert(`Reminder set for ${formattedTime} on ${day}`)
-        }
+        onPress={() => {
+          if (step < 5) {
+            setStep(step + 1);
+          } else {
+            // Navigasi ke Home saat finish
+            navigation.navigate('Home');
+          }
+        }}
         style={{ marginTop: 30, backgroundColor: '#FFA500' }}
         labelStyle={{ color: '#000' }}
       >
