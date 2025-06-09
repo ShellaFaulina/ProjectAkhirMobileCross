@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import dataAllRecipe from '../dataAllRecipe.json'; // ubah nama file data resep sesuai
+import { Ionicons } from '@expo/vector-icons';
+import dataAllRecipe from '../Data/DataAllRecipe.json';
 import imageMapping from './imageMapping';
 
 const AllRecipe = ({ navigation }) => {
@@ -12,6 +13,7 @@ const AllRecipe = ({ navigation }) => {
         key={item.id}
         style={styles.card}
         onPress={() => navigation.navigate('DetailScreen', { item })}
+        activeOpacity={0.85}
       >
         <Image source={imageSource} style={styles.image} />
         <View style={styles.infoContainer}>
@@ -34,6 +36,10 @@ const AllRecipe = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Tombol Back */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#7F4F24" />
+      </TouchableOpacity>
       <Text style={styles.header}>📋 Semua Resep</Text>
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         {dataAllRecipe.map((item) => renderItem(item))}
@@ -43,78 +49,97 @@ const AllRecipe = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff8f0' },
+  container: { flex: 1, backgroundColor: '#FFF8F0' },
+  backButton: {
+    position: 'absolute',
+    top: 18,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 6,
+    elevation: 2,
+  },
   header: {
-    color: '#e67e22',
-    fontSize: 24,
+    color: '#7F4F24',
+    fontSize: 23,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 20,
+    marginTop: 32,
+    marginBottom: 18,
+    letterSpacing: 0.2,
   },
   card: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    marginHorizontal: 10,
-    marginVertical: 6,
-    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 14,
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#aaa',
+    elevation: 2,
+    shadowColor: '#B08968',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
   image: {
-    width: 90,
-    height: 90,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    width: 92,
+    height: 92,
+    borderTopLeftRadius: 14,
+    borderBottomLeftRadius: 14,
+    backgroundColor: '#FFE5B4',
   },
   infoContainer: {
     flex: 1,
-    padding: 10,
+    padding: 14,
     position: 'relative',
+    justifyContent: 'center',
   },
   category: {
-    color: '#2ecc71',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: '#B08968',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 2,
   },
   title: {
-    color: '#333',
+    color: '#7F4F24',
     fontSize: 16,
     fontWeight: 'bold',
-    marginVertical: 4,
+    marginBottom: 4,
+    flexWrap: 'wrap',
   },
   detail: {
-    color: '#7f8c8d',
-    fontSize: 14,
+    color: '#B08968',
+    fontSize: 13,
+    marginBottom: 6,
   },
   bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
+    alignItems: 'center',
+    marginTop: 2,
   },
   rating: {
-    color: '#f39c12',
+    color: '#EF4444',
     fontSize: 14,
     fontWeight: 'bold',
   },
   views: {
-    color: '#888',
-    fontSize: 14,
+    color: '#7F4F24',
+    fontSize: 13,
+    fontWeight: '600',
   },
   statusContainer: {
     position: 'absolute',
     bottom: 8,
-    left: 10,
-    backgroundColor: '#ffeaa7',
+    left: 14,
+    backgroundColor: '#FFE5B4',
     borderRadius: 5,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
   },
   status: {
-    color: '#d35400',
+    color: '#7F4F24',
     fontSize: 12,
     fontWeight: 'bold',
   },
