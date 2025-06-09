@@ -1,223 +1,289 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
+  TextInput,
   TouchableOpacity,
-  ScrollView,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+  FlatList,
+  StyleSheet,
+  Image,
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import dataAllRecipes from '../Data/DataAllRecipe.json';
+import imageMapping from './imageMapping';
 
-const notifications = {
-  Today: [
-    {
-      id: 1,
-      title: "New recipe!",
-      desc: "Far far away, behind the word mountains, far from the countries.",
-      unread: true,
-    },
-    {
-      id: 2,
-      title: "Don’t forget to try your saved recipe",
-      desc: "Far far away, behind the word mountains, far from the countries.",
-      unread: true,
-    },
-  ],
-  Yesterday: [
-    {
-      id: 3,
-      title: "Don’t forget to try your saved recipe",
-      desc: "Far far away, behind the word mountains, far from the countries.",
-      unread: false,
-    },
-  ],
-};
+const Search = ({ navigation }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('Makanan Berat');
+  const [searchText, setSearchText] = useState('');
 
-const NotificationScreen = () => {
-  const [selectedTab, setSelectedTab] = useState("All");
-  const navigation = useNavigation();
+  const categories = [
+    'Makanan Berat',
+    'Makanan Ringan',
+    'Minuman',
+    'Dessert',
+    'Soup',
+    'Salad',
+  ];
 
-  const filterNotifications = () => {
-    if (selectedTab === "All") return notifications;
-    const filtered = {};
-    Object.entries(notifications).forEach(([day, list]) => {
-      filtered[day] = list.filter((item) =>
-        selectedTab === "Unread" ? item.unread : !item.unread
-      );
-    });
-    return filtered;
+  const handleSelectCategory = (category) => {
+    setSelectedCategory(category);
+    setShowDropdown(false);
   };
 
-  const renderNotificationCard = (item) => (
-    <View key={item.id} style={styles.card}>
-      <View style={styles.iconWrapper}>
-        <Ionicons name="fast-food-outline" size={22} color="white" />
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.desc}>{item.desc}</Text>
-      </View>
-      {item.unread && <View style={styles.dot} />}
-    </View>
+  // Simpan item ke pencarian terakhir di AsyncStorage
+  const saveLastSearch = async (item) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('@last_search');
+      let lastSearches = jsonValue != null ? JSON.parse(jsonValue) : [];
+
+      // Cek item sudah ada atau belum berdasarkan id
+      const exists = lastSearches.some(searchItem => searchItem.id === item.id);
+      if (!exists) {
+        // Masukkan di depan list
+        lastSearches.unshift(item);
+
+        // Batasi max 10 item
+        if (lastSearches.length > 10) lastSearches.pop();
+
+        await AsyncStorage.setItem('@last_search', JSON.stringify(lastSearches));
+      }
+    } catch (e) {
+      console.error('Gagal menyimpan pencarian terakhir:', e);
+    }
+  };
+
+  const filteredData = dataAllRecipes.filter(
+    (item) =>
+      item.category.toLowerCase() === selectedCategory.toLowerCase() &&
+      item.title.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const tabs = ["All", "Unread", "Read"];
+  const renderItem = ({ item }) => {
+    const imageSource =
+      imageMapping[item.imageName] || imageMapping['default.jpg'];
+
+    return (
+      <TouchableOpacity
+        style={styles.resultItem}
+        onPress={() => {
+          saveLastSearch(item);
+          navigation.navigate('DetailScreen', { item });
+        }}
+        activeOpacity={0.85}
+      >
+        <Image source={imageSource} style={styles.thumbnail} />
+        <View style={styles.resultInfo}>
+          <Text style={styles.resultTitle}>{item.title}</Text>
+          <Text style={styles.resultSubtitle}>
+            {item.ingredientsCount} Bahan • {item.cookTime}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={22} color="#B08968" style={{ marginLeft: 8 }} />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#7F4F24" />
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="#7F4F24" />
+      </TouchableOpacity>
 
-        <Text style={styles.headerText}>Notifications</Text>
+      <Text style={styles.header}>Cari Resep Favoritmu</Text>
 
-        <View style={{ width: 24 }} />
+      <View style={styles.searchBox}>
+        <Ionicons name="search" size={18} color="#B08968" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Ketik nama resep"
+          placeholderTextColor="#B08968"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
       </View>
 
-      <View style={styles.tabRow}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[
-              styles.tabButton,
-              selectedTab === tab && styles.activeTabButton,
-            ]}
-            onPress={() => setSelectedTab(tab)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === tab && styles.activeTabText,
-              ]}
-            >
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={() => setShowDropdown(!showDropdown)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.dropdownText}>
+          {selectedCategory}
+        </Text>
+        <Ionicons name={showDropdown ? "chevron-up" : "chevron-down"} size={20} color="#7F4F24" />
+      </TouchableOpacity>
 
-      <ScrollView style={styles.listContainer}>
-        {Object.entries(filterNotifications()).map(([day, data]) => (
-          <View key={day}>
-            {data.length > 0 && <Text style={styles.dayHeader}>{day}</Text>}
-            {data.map((item) => renderNotificationCard(item))}
-          </View>
-        ))}
-        <Text style={styles.endText}>You’re all set!</Text>
-      </ScrollView>
+      {showDropdown && (
+        <View style={styles.dropdownMenu}>
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.dropdownItem,
+                  item === selectedCategory && styles.dropdownItemSelected,
+                ]}
+                onPress={() => handleSelectCategory(item)}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    item === selectedCategory && styles.dropdownItemTextSelected,
+                  ]}
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+
+      <FlatList
+        data={filteredData}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>Tidak ada resep ditemukan.</Text>
+        }
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 };
-
-export default NotificationScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F0",
-    paddingHorizontal: 20,
-    paddingTop: 50,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: '#FFF8F0',  // krem lembut
+    padding: 0,
+    paddingTop: 56,
   },
   backButton: {
-    padding: 4,
+    position: 'absolute',
+    top: 18,
+    left: 18,
+    zIndex: 10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 6,
+    elevation: 2,
   },
-  headerText: {
+  header: {
+    color: '#7F4F24',           // coklat tua
     fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    flex: 1,
-    color: "#7F4F24",
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 24,
+    letterSpacing: 0.5,
   },
-  tabRow: {
-    flexDirection: "row",
-    marginVertical: 20,
-    justifyContent: "space-between",
-    backgroundColor: "white",
+  searchBox: {
+    flexDirection: 'row',
+    backgroundColor: '#FFEFE5',
+    alignItems: 'center',
     borderRadius: 12,
-    padding: 5,
+    paddingHorizontal: 14,
+    marginHorizontal: 18,
+    marginBottom: 14,
+    height: 44,
   },
-  tabButton: {
+  searchInput: {
     flex: 1,
-    alignItems: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  activeTabButton: {
-    backgroundColor: "#FF6F3C",
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#A67C52",
-  },
-  activeTabText: {
-    color: "white",
-  },
-  dayHeader: {
-    marginVertical: 10,
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#7F4F24",
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 15,
-    marginBottom: 10,
-    position: "relative",
-    // shadow for iOS
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    // elevation for Android
-    elevation: 3,
-  },
-  iconWrapper: {
-    backgroundColor: "#2ECC71",
     padding: 10,
-    borderRadius: 30,
-    marginRight: 10,
+    fontSize: 16,
+    color: '#7F4F24',
+    marginLeft: 8,
+    backgroundColor: 'transparent',
   },
-  textContainer: {
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFE5B4',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 18,
+    marginBottom: 10,
+    elevation: 1,
+  },
+  dropdownText: {
+    color: '#7F4F24',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  dropdownMenu: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    marginHorizontal: 18,
+    marginBottom: 14,
+    elevation: 2,
+    maxHeight: 220,
+  },
+  dropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFE5B4',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#FFB74D',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#7F4F24',
+  },
+  dropdownItemTextSelected: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  resultItem: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    marginHorizontal: 18,
+    marginVertical: 7,
+    padding: 12,
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#B08968',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  thumbnail: {
+    width: 70,
+    height: 70,
+    borderRadius: 12,
+    marginRight: 15,
+    backgroundColor: '#FFE8D3',
+  },
+  resultInfo: {
     flex: 1,
   },
-  title: {
-    fontWeight: "bold",
-    fontSize: 14,
-    color: "#7F4F24",
+  resultTitle: {
+    color: '#7F4F24',
+    fontSize: 17,
+    fontWeight: 'bold',
   },
-  desc: {
+  resultSubtitle: {
+    color: '#B08968',
     fontSize: 13,
-    color: "#6B4B2A",
+    marginTop: 6,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#FF3B30",
-    position: "absolute",
-    right: 10,
-    top: 10,
-  },
-  endText: {
-    textAlign: "center",
-    marginVertical: 20,
-    color: "#6B4B2A",
-  },
-  listContainer: {
-    flex: 1,
+  emptyText: {
+    color: '#A1887F',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 50,
   },
 });
+
+export default Search;
