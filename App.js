@@ -28,6 +28,10 @@ import SplashScreen from "./LoginScreen/splash";
 import LoginScreen from "./LoginScreen/Login";
 import RegisterScreen from "./LoginScreen/Register";
 import GetStartedScreen from "./LoginScreen/getStarted";
+import ForgotPassword from "./LoginScreen/ForgotPW";
+import ResetPassword from "./LoginScreen/ResetPW";
+import DietForm from "./LoginScreen/DietForm";
+
 
 // Auth Context
 export const AuthContext = createContext();
@@ -103,6 +107,9 @@ const AppNavigator = () => {
         <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
         <Stack.Screen name="EditProfile" component={EditProfile} />
         <Stack.Screen name="EditRecipe" component={EditRecipe} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+        <Stack.Screen name="ResetPassword" component={ResetPassword} />
+        <Stack.Screen name="DietForm" component={DietForm} />
       </Stack.Navigator>
     </NavigationContainer>
   );
