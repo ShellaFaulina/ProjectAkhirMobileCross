@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Icon from 'react-native-vector-icons/Feather';
-import { supabase } from './supabaseClient'; // Import supabase client
+import { supabase } from '../supabaseClient'; // Import supabase client
 
 export default function Signup({ navigation }) {
   const [email, setEmail] = useState('');
@@ -62,7 +62,7 @@ export default function Signup({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Image source={require('./assets/favicon.png')} style={styles.logo} />
+      <Image source={require('../assets/favicon.png')} style={styles.logo} />
       <Text style={styles.title}>Register</Text>
 
       <View style={styles.inputContainer}>
